@@ -1,0 +1,7 @@
+# Runtime/customer data and deployment artifacts
+assets/uploads/
+assets/ueditor/php/upload/
+.well-known/
+*.bak-*
+*.bak
+.DS_Store

@@ -1,0 +1,66 @@
+/* ============================================================
+   整屏翻页滚动 — page-transition.css
+   来源：莎夏尚品官网（整理后可复用到任意项目）
+   用法：<link rel="stylesheet" href="page-transition.css">
+   ============================================================ */
+
+/* 面板容器：相对定位，撑满首屏 */
+html.page-transition .page-stack {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* 面板：绝对定位全屏；默认隐藏，靠 translateY 位移切换 */
+html.page-transition .page-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  visibility: hidden;
+  will-change: transform;
+  transition: transform 1s cubic-bezier(.86, 0, .03, 1);
+}
+
+/* 只渲染当前屏及相邻屏（性能） */
+html.page-transition .page-panel.page-near {
+  visibility: visible;
+}
+
+/* 内容入场：子元素上浮淡入 */
+html.page-transition .page-panel.page-play section > * {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 1.2s ease, transform 1.2s ease;
+}
+
+html.page-transition .page-panel.page-play.page-visible section > * {
+  opacity: 1;
+  transform: none;
+}
+
+/* 初始化阶段关闭动画，避免首屏抖动 */
+html.page-transition .page-panel.no-anim,
+html.page-transition .page-panel.no-anim section > * {
+  transition: none;
+}
+
+/* ---------- 移动端（<768px）：改为页面整体自然滚动 ---------- */
+@media (max-width: 767px) {
+  /* 关键：解除每屏独立滚动容器，否则触摸滚动被吞进屏内，页面无法上下翻动 */
+  .snap-section,
+  .page-panel,
+  section.snap-section {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+
+  /* 防横向溢出用 clip，不要用 hidden（hidden 会把 overflow-y 变回 auto 锁死滚动） */
+  .snap-section,
+  .page-panel,
+  section.snap-section {
+    overflow-x: clip;
+  }
+}
