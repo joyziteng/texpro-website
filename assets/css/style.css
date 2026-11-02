@@ -524,3 +524,9 @@ body.pg-contact{background:var(--parchment);}
 .tiles.duo{grid-template-columns:1fr 1fr;margin-top:30px;margin-bottom:8px;}
 .arrivals-band .tiles{width:var(--max);max-width:92%;margin-left:auto;margin-right:auto;padding:0 0 8px;}
 .arrivals-band .tiles .tile p{font-size:15px;}
+
+/* B2 客群主题入口 pills（补：此前只有标记无样式） */
+.theme-links{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;width:var(--max);max-width:92%;margin:16px auto 0;}
+.theme-links .tl-label{font-size:14px;color:var(--muted);}
+.theme-links a{display:inline-flex;align-items:center;min-height:34px;padding:6px 18px;border:1px solid rgba(0,102,204,.32);border-radius:var(--pill);background:rgba(0,102,204,.08);color:var(--blue);font-size:14px;}
+.theme-links a:hover{background:rgba(0,102,204,.14);text-decoration:none;}
