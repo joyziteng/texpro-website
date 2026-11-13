@@ -47,7 +47,7 @@ html.page-transition .page-panel.no-anim section > * {
 }
 
 /* ---------- 移动端（<768px）：改为页面整体自然滚动 ---------- */
-@media (max-width: 767px) {
+@media (max-width: 734px) {
   /* 关键：解除每屏独立滚动容器，否则触摸滚动被吞进屏内，页面无法上下翻动 */
   .snap-section,
   .page-panel,

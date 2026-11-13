@@ -23,7 +23,7 @@
     rootSelector: null, // null = document.documentElement
     stackSelector: '.page-stack',
     sectionSelector: '.snap-section',
-    mobileBreakpoint: '(max-width: 767px)',
+    mobileBreakpoint: '(max-width: 734px)',
     initDelay: 800,        // 框架重渲染后初始化更稳
     animDuration: 800,     // 与 CSS transform 1s 动画同步
     wheelThrottle: 34,     // 滚轮节流（ms）
@@ -32,6 +32,7 @@
   };
 
   var root, stack, panels, nums = 0, index = 0, animating = false, inited = false;
+  var listeners = [], mqRef = null, mqHandler = null, booting = false;
 
   function collect() {
     root = CONFIG.rootSelector ? document.querySelector(CONFIG.rootSelector) : document.documentElement;
@@ -122,14 +123,41 @@
     return true;
   }
 
+  function on(target, type, fn, opts) {
+    target.addEventListener(type, fn, opts);
+    listeners.push({ target: target, type: type, fn: fn, opts: opts });
+  }
+
+  function unbindAll() {
+    listeners.forEach(function (l) {
+      if (l.target.removeEventListener) l.target.removeEventListener(l.type, l.fn, l.opts);
+    });
+    listeners = [];
+  }
+
+  // 断点监听独立于 init：移动端加载时也能在切回桌面后唤回翻页
+  function watchBreakpoint() {
+    if (mqRef && mqHandler) {
+      if (mqRef.removeEventListener) mqRef.removeEventListener('change', mqHandler);
+      else if (mqRef.removeListener) mqRef.removeListener(mqHandler);
+    }
+    mqRef = window.matchMedia(CONFIG.mobileBreakpoint);
+    mqHandler = function (ev) {
+      if (ev.matches) destroy();
+      else if (!inited) boot();
+    };
+    if (mqRef.addEventListener) mqRef.addEventListener('change', mqHandler);
+    else if (mqRef.addListener) mqRef.addListener(mqHandler);
+  }
+
   function bindEvents() {
     // 头部尺寸随窗口变化时重测（字号/换行会影响头部高度）
-    window.addEventListener('resize', function () {
+    on(window, 'resize', function () {
       if (inited) measureHeader();
     });
     // 1) 滚轮：屏内可滚动时先滚屏内，到底再翻页
     var wheelLock = false;
-    window.addEventListener('wheel', function (e) {
+    on(window, 'wheel', function (e) {
       if (animating || wheelLock) return;
       wheelLock = true;
       setTimeout(function () { wheelLock = false; }, CONFIG.wheelThrottle);
@@ -145,17 +173,17 @@
     }, { passive: true });
 
     // 2) 键盘
-    window.addEventListener('keydown', function (e) {
+    on(window, 'keydown', function (e) {
       if (e.key === 'ArrowDown') { e.preventDefault(); goTo(index + 1); }
       if (e.key === 'ArrowUp') { e.preventDefault(); goTo(index - 1); }
     });
 
     // 3) 触摸滑动
     var sy = 0, sx = 0;
-    window.addEventListener('touchstart', function (e) {
+    on(window, 'touchstart', function (e) {
       sy = e.touches[0].clientY; sx = e.touches[0].clientX;
     }, { passive: true });
-    window.addEventListener('touchend', function (e) {
+    on(window, 'touchend', function (e) {
       var dy = sy - e.changedTouches[0].clientY;
       var dx = e.changedTouches[0].clientX - sx;
       if (Math.abs(dy) > CONFIG.touchThreshold && Math.abs(dy) > Math.abs(dx)) {
@@ -164,7 +192,7 @@
     }, { passive: true });
 
     // 4) 点击导航点（容器内 button 的顺序即页码）
-    document.addEventListener('click', function (e) {
+    on(document, 'click', function (e) {
       var t = e.target;
       if (!t || !t.closest) return;
       var btn = t.closest('button');
@@ -175,23 +203,17 @@
       if (i >= 0) { e.preventDefault(); e.stopPropagation(); goTo(i); }
     }, true);
 
-    // 断点切换：切到移动端时销毁翻页，恢复自然滚动
-    var mq = window.matchMedia(CONFIG.mobileBreakpoint);
-    var onChange = function (ev) {
-      if (ev.matches) destroy();
-      else if (!inited) boot();
-    };
-    if (mq.addEventListener) mq.addEventListener('change', onChange);
-    else if (mq.addListener) mq.addListener(onChange);
   }
 
   function destroy() {
     if (!inited) return;
+    unbindAll();
     root.classList.remove('page-transition');
     if (stack) stack.classList.remove('page-stack');
     panels.forEach(function (p) {
       p.classList.remove('page-panel', 'page-near', 'page-visible', 'page-play', 'no-anim');
       p.style.transform = '';
+      p.style.transition = '';
     });
     document.body.style.overflowY = '';
     inited = false;
@@ -200,17 +222,21 @@
   function boot() {
     // 移动端不启用整屏翻页（用自然滚动）
     if (window.matchMedia(CONFIG.mobileBreakpoint).matches) return;
+    if (inited || booting) return;
+    booting = true;
     var tries = 0;
     function run() {
       tries++;
-      if (init()) return;
+      if (init()) { booting = false; return; }
       if (tries < CONFIG.retryTimes) setTimeout(run, 400);
+      else booting = false;
     }
     if (document.readyState === 'complete') setTimeout(run, CONFIG.initDelay);
-    else window.addEventListener('load', function () { setTimeout(run, CONFIG.initDelay); });
+    else window.addEventListener('load', function () { setTimeout(run, CONFIG.initDelay); }, { once: true });
   }
 
   // 对外暴露（可选调用：window.fullpage.goTo(2)）
   window.fullpage = { goTo: goTo, destroy: destroy, init: boot };
+  watchBreakpoint();
   boot();
 })();

@@ -29,18 +29,65 @@
       dots.push(li);
     });
 
+    /* 图片就绪跟踪：轮播只在目标图已下载完成时才切，避免慢网络下切到空白黑屏 */
+    var ready = {};
+    function bgUrl(el) {
+      if (!el) return '';
+      var bg = el.style.backgroundImage || '';
+      var m = bg.match(/url\(["']?([^"')]+)["']?\)/);
+      if (m) return m[1];
+      return el.getAttribute('data-bg') || ''; // hero2-6 的懒加载地址
+    }
+    function preload(i) {
+      var el = slides[i];
+      if (!el) return;
+      var url = bgUrl(el);
+      if (!url) { ready[i] = true; return; }
+      /* data-bg 尚未注入时提前注入，避免轮播切到「无背景」的 li */
+      if (!el.style.backgroundImage) el.style.backgroundImage = 'url(' + url + ')';
+      if (ready[i] !== undefined) return;
+      ready[i] = false;
+      var im = new Image();
+      im.onload = function () { ready[i] = true; };
+      im.onerror = function () { ready[i] = true; }; // 加载失败也放行，避免永远卡住
+      im.src = url;
+    }
+    function preloadAhead() {
+      preload(idx);
+      preload((idx + 1) % slides.length);
+      preload((idx + 2) % slides.length);
+    }
+    function readyAt(i) { return ready[i] === true; }
+    function nearestReady(from, dir) {
+      for (var step = 1; step <= slides.length; step++) {
+        var cand = (from + dir * step + slides.length) % slides.length;
+        if (readyAt(cand)) return cand;
+      }
+      return -1;
+    }
+
     function go(n) {
       idx = (n + slides.length) % slides.length;
       slides.forEach(function (s, i) { s.classList.toggle('on', i === idx); });
       dots.forEach(function (d, i) { d.classList.toggle('on', i === idx); });
+      preloadAhead();
     }
-    function next() { go(idx + 1); }
+    function next() {
+      var target = nearestReady(idx, 1);
+      if (target >= 0) go(target);
+      else preload((idx + 1) % slides.length); // 下一张未就绪：留在当前张，下个周期再试
+    }
+    function prevSlide() {
+      var target = nearestReady(idx, -1);
+      if (target >= 0) go(target);
+      else preload((idx - 1 + slides.length) % slides.length);
+    }
     function autoAllowed() { return !userPaused && !reduce(); }
     function start() { clearInterval(timer); timer = null; if (autoAllowed()) timer = setInterval(next, 4200); }
 
     var prev = focus.querySelector('.prev'), nxt = focus.querySelector('.next');
-    if (prev) prev.addEventListener('click', function () { go(idx - 1); start(); });
-    if (nxt) nxt.addEventListener('click', function () { go(idx + 1); start(); });
+    if (prev) prev.addEventListener('click', function () { prevSlide(); start(); });
+    if (nxt) nxt.addEventListener('click', function () { next(); start(); });
 
     /* 悬停暂停保留；离开时若用户未手动暂停且未开启减弱动效，则恢复自动播放 */
     focus.addEventListener('mouseenter', function () { clearInterval(timer); timer = null; });
@@ -78,8 +125,20 @@
       }
     }
 
+    /* 首屏：先预热第 0/1 张，首张就绪后再启动自动轮播（3s 兜底，避免图片挂了不播） */
+    preload(0);
+    preload(1);
     go(0);
-    start();
+    var started = false;
+    function begin() { if (started) return; started = true; start(); }
+    if (readyAt(0)) begin();
+    else {
+      var waitFrom = Date.now();
+      (function wait() {
+        if (readyAt(0) || Date.now() - waitFrom > 3000) { begin(); return; }
+        setTimeout(wait, 100);
+      })();
+    }
   }
 
   /* ---------- Products tabs (left rail, hash deep-links) ---------- */
@@ -223,13 +282,20 @@
         company: LANG === 'zh' ? '公司' : 'Company',
         category: LANG === 'zh' ? '意向品类' : 'Category',
         message: LANG === 'zh' ? '需求详情' : 'Message',
-        rate: LANG === 'zh' ? '提交频率' : 'Submit rate'
+        rate: LANG === 'zh' ? '提交频率' : 'Submit rate',
+        method: LANG === 'zh' ? '请求方式' : 'Request method',
+        origin: LANG === 'zh' ? '请求来源' : 'Request origin',
+        server: LANG === 'zh' ? '服务器' : 'Server'
       },
       reasons: {
         'required': LANG === 'zh' ? '必填' : 'required',
         'invalid email': LANG === 'zh' ? '格式不正确' : 'invalid format',
         'too long': LANG === 'zh' ? '超出长度限制' : 'too long',
-        'too many requests': LANG === 'zh' ? '提交过于频繁，请一小时后再试' : 'too many submissions, please try again later'
+        'too many requests': LANG === 'zh' ? '提交过于频繁，请一小时后再试' : 'too many submissions, please try again later',
+        'POST required': LANG === 'zh' ? '请求方式不正确' : 'invalid request method',
+        'forbidden': LANG === 'zh' ? '请求来源不被允许' : 'request origin not allowed',
+        'storage error': LANG === 'zh' ? '服务器暂时不可用，请稍后重试或直接邮件联系' : 'server temporarily unavailable, please retry later or email us',
+        'encoding error': LANG === 'zh' ? '内容包含无法识别的字符，请调整后重试' : 'content contains invalid characters, please adjust and retry'
       }
     };
 

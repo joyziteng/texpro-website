@@ -250,7 +250,7 @@ body.pg-products{background:var(--parchment);}
 .product-layout{display:flex;gap:28px;width:var(--max);max-width:92%;margin:44px auto 88px;align-items:flex-start;}
 .p-rail{flex:0 0 220px;position:sticky;top:68px;}
 .p-rail .m-wg-hd{padding:4px 14px 12px;}
-.p-rail .m-wg-hd h2{font-family:var(--sf-t);font-size:12px;font-weight:600;letter-spacing:.1em;
+.p-rail .m-wg-hd h1,.p-rail .m-wg-hd h2{font-family:var(--sf-t);font-size:12px;font-weight:600;letter-spacing:.1em;
   text-transform:uppercase;color:var(--muted);}
 .p-rail ul li a{display:block;padding:9px 14px;font-size:14px;color:var(--ink);border-radius:var(--r-md);
   margin-bottom:2px;transition:.15s;white-space:nowrap;}
@@ -259,7 +259,7 @@ body.pg-products{background:var(--parchment);}
 .p-main{flex:1;min-width:0;background:#fff;border:1px solid var(--hairline);
   border-radius:var(--r-lg);overflow:hidden;}
 .p-main .m-wg-hd{padding:22px 28px;border-bottom:1px solid var(--divider);}
-.p-main .m-wg-hd h2{font-size:21px;font-weight:600;letter-spacing:-.01em;}
+.p-main .m-wg-hd h1,.p-main .m-wg-hd h2{font-size:21px;font-weight:600;letter-spacing:-.01em;}
 .p-panel{display:none;padding:28px;}
 .p-panel.active{display:block;animation:fade .28s ease;}
 @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
@@ -293,7 +293,7 @@ body.pg-contact{background:var(--parchment);}
 .contact-sub{text-align:center;font-size:21px;font-weight:600;color:var(--ink);margin:8px 0 36px;}
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch;}
 .contact-card,.contact-map{background:#fff;border:1px solid var(--hairline);border-radius:var(--r-lg);padding:36px 38px;}
-.contact-card h3,.contact-map h3,.contact-form h3{font-size:21px;font-weight:600;margin-bottom:18px;}
+.contact-card h2,.contact-card h3,.contact-map h2,.contact-map h3,.contact-form h2,.contact-form h3{font-size:21px;font-weight:600;margin-bottom:18px;}
 .contact-card ul li{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid var(--divider);line-height:1.5;}
 .contact-card ul li:last-child{border-bottom:0;}
 .contact-card .ic{flex:0 0 88px;font-size:14px;color:var(--muted);padding-top:1px;}
@@ -334,6 +334,7 @@ body.pg-contact{background:var(--parchment);}
 .form-privacy{font-size:12px;color:var(--muted);margin-top:12px;}
 .hp-field{position:absolute!important;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;}
 .form-note{font-size:12px;color:var(--muted);margin-top:14px;}
+.noscript-note{font-size:14px;line-height:1.6;color:var(--ink-80);background:var(--parchment);border:1px solid var(--hairline);border-radius:var(--r-md);padding:14px 16px;margin-bottom:20px;}
 .form-note.ok{color:var(--ok);}
 .form-note.err{color:var(--danger);}
 /* 表单字段级校验错误：红框 + 行内错误文字 */
