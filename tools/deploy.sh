@@ -27,6 +27,10 @@ DRY="${3:-}"
 echo "==> 1/4 静态校验"
 python3 -I "$ROOT/tools/check.py"
 
+# favicon.ico 常来自下载附件，可能带 600 权限；rsync 会保留权限，
+# 传到服务器后 nginx 读不到会返回 403。统一改成 644。
+chmod 644 "$ROOT/favicon.ico"
+
 echo "==> 2/4 同步到 $TARGET ${DRY:+（dry-run）}"
 RSYNC=(rsync -avz --delete
   --exclude '.git/'

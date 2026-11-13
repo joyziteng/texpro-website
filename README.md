@@ -86,6 +86,9 @@ TEXPRO（南京舜特斯普家居用品有限公司）中英文官网源码。�
    ```
 
 5. **同步站点文件**（`tools/` 不进站点根目录）
+
+   > `favicon.ico` 常来自下载附件，可能带 `600` 权限；`rsync` 会保留权限，传到服务器后 nginx 读不到会返回 403。`tools/deploy.sh` 已在同步前统一 `chmod 644`；若手工 rsync，需先确认 `favicon.ico` 为 `644` 且 nginx 用户可读。
+
    ```bash
    tools/deploy.sh user@host:/var/www/texpro/ --dry-run   # 先看增删清单
    tools/deploy.sh user@host:/var/www/texpro/ https://your-domain.example/
