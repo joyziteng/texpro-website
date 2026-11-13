@@ -21,6 +21,7 @@ TEXPRO（南京舜特斯普家居用品有限公司）中英文官网源码。�
 | `assets/scroll/` | 首页整屏翻页（`page-transition.css` + `fullpage-scroll.js`） |
 | `assets/img\|media\|products\|images/` | 图片与视频，约 91 MiB |
 | `inquiry.php` | 唯一后端接口：校验询盘 → 追加写 JSONL → best-effort 邮件通知 |
+| `favicon.ico` | 站点图标（多尺寸 ico，18 个页面统一引用） |
 | `robots.txt`、`sitemap.xml` | SEO 静态文件 |
 | `tools/check.py` | 只读静态校验（纯标准库） |
 | `tools/deploy.sh` | 部署脚本（人工触发） |

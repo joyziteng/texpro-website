@@ -78,6 +78,15 @@ elif vers:
         if asset and "?v=" not in texts[f]:
             err("E202", "%s 引用静态资源但缺 ?v= 版本号" % f)
 
+# ---------- 2b. favicon ----------
+if not os.path.exists("favicon.ico"):
+    err("E211", "仓库根目录缺 favicon.ico")
+for f in htmls:
+    if 'rel="icon"' not in texts[f]:
+        err("E212", "%s 缺 <link rel=\"icon\">" % f)
+    elif 'href="favicon.ico"' not in texts[f]:
+        warn("W213", "%s 的 favicon 未指向仓库根目录的 favicon.ico" % f)
+
 # ---------- 3. 页面成对与语言 ----------
 for f in htmls:
     lang = re.search(r'<html[^>]*lang="([^"]+)"', texts[f])
