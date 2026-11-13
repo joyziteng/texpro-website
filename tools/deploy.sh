@@ -2,19 +2,27 @@
 # TEXPRO 官网部署脚本（人工触发；CI 未接入）
 #
 # 用法：
-#   tools/deploy.sh user@host:/var/www/texpro/ --dry-run   # 先看会传什么
-#   tools/deploy.sh user@host:/var/www/texpro/             # 正式同步
-#   BASE_URL 可用第三个参数覆盖，默认 https://www.texpro.com.cn
+#   tools/deploy.sh <user@host:/var/www/texpro/> <https://主域/> [--dry-run]
 #
-# 流程：静态校验 → rsync（--delete，排除 .git）→ 部署后逐 URL 状态码校验。
+# 示例：
+#   tools/deploy.sh deploy@your-host:/var/www/texpro/ https://www.example.com/ --dry-run
+#   tools/deploy.sh deploy@your-host:/var/www/texpro/ https://www.example.com/
+#
+# 参数说明：
+#   $1  rsync 目标（必填）
+#   $2  部署后校验用的完整站点 URL（必填，含协议与结尾斜杠）
+#   $3  --dry-run 时只预览变更，不写远端、不做部署后校验
+#
+# 流程：静态校验 → rsync（--delete，排除 .git/ 与 tools/）→ 部署后逐 URL 状态码校验。
 # 注意：--delete 会删除目标端多余文件；首次使用请务必先 --dry-run。
+# 环境要求见 README.md 第二节。
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TARGET="${1:?用法: tools/deploy.sh user@host:/var/www/texpro/ [--dry-run]}"
-DRY="${2:-}"
-BASE="${3:-https://www.texpro.com.cn}"
+TARGET="${1:?用法: tools/deploy.sh <user@host:/var/www/texpro/> <https://主域/> [--dry-run]}"
+BASE="${2:?请提供部署后校验用的完整站点 URL，例如 https://www.example.com/}"
+DRY="${3:-}"
 
 echo "==> 1/4 静态校验"
 python3 -I "$ROOT/tools/check.py"
@@ -36,10 +44,10 @@ fi
 echo "==> 3/4 部署后校验（$BASE）"
 FAIL=0
 for p in index.html cn.html en.html about-cn.html products-cn.html contact-cn.html robots.txt sitemap.xml 404.html; do
-  code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 "$BASE/$p" || echo 000)
+  code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 "$BASE$p" || echo 000)
   printf '  %-28s %s\n' "$p" "$code"
   case "$p" in
-    404.html) [[ "$code" == "404" || "$code" == "200" ]] || FAIL=1 ;;
+    404.html) [[ "$code" == "404" ]] || FAIL=1 ;;
     *)        [[ "$code" == "200" ]] || FAIL=1 ;;
   esac
 done
